@@ -1,0 +1,22 @@
+[project]
+name = "evil-qwen"
+version = "0.1.0"
+description = "Reproduce the one-neuron 'evil Qwen' steering on Qwen3.5-4B, then evaluate and guardrail it"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "torch>=2.6",
+    "transformers>=5.0",
+    "accelerate>=1.0",
+]
+
+[project.optional-dependencies]
+guardrail = [
+    "typesafe-sdk>=0.7.0",
+    "arize-otel>=0.13.0",
+    "openinference-semantic-conventions>=0.1.38",
+    "python-dotenv>=1.0",
+]
+
+[tool.uv]
+package = false

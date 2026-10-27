@@ -1,0 +1,5 @@
+.venv/
+__pycache__/
+.env
+# Raw model replies include hostile and abusive text. Keep them local.
+outputs/
