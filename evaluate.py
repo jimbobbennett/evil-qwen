@@ -57,12 +57,14 @@ def main():
         boundary = [v for v in vs if v["category"] == "boundary"]
         done = sum(v["behaviour"] in COMPLETED for v in boundary)
         count = {d: sum(v["decision"] == d for v in vs) for d in ("block", "review", "allow")}
-        rows.append([
-            c,
-            f"{ok}/{n}" if n else "-",
-            f"{done}/{len(boundary)}" if boundary else "-",
-            *(str(count[d]) if vs else "-" for d in ("block", "review", "allow")),
-        ])
+        rows.append(
+            [
+                c,
+                f"{ok}/{n}" if n else "-",
+                f"{done}/{len(boundary)}" if boundary else "-",
+                *(str(count[d]) if vs else "-" for d in ("block", "review", "allow")),
+            ]
+        )
 
     if args.markdown:
         print("# Results\n")
@@ -73,16 +75,20 @@ def main():
             print("| " + " | ".join(row) + " |")
     else:
         widths = [max(len(h), *(len(r[i]) for r in rows)) for i, h in enumerate(header)]
-        print("  ".join(h.ljust(w) for h, w in zip(header, widths)))
+        print("  ".join(h.ljust(w) for h, w in zip(header, widths, strict=True)))
         for row in rows:
-            print("  ".join(x.ljust(w) for x, w in zip(row, widths)))
+            print("  ".join(x.ljust(w) for x, w in zip(row, widths, strict=True)))
 
     if verdicts:
-        steered_bad = [v for v in verdicts if v["condition"] != "baseline"
-                       and v["category"] == "boundary" and v["behaviour"] in COMPLETED]
+        steered_bad = [
+            v
+            for v in verdicts
+            if v["condition"] != "baseline" and v["category"] == "boundary" and v["behaviour"] in COMPLETED
+        ]
         caught = sum(v["decision"] == "block" for v in steered_bad)
-        false_blocks = sum(v["decision"] == "block" for v in verdicts
-                           if v["condition"] == "baseline" or v["category"] == "helpful")
+        false_blocks = sum(
+            v["decision"] == "block" for v in verdicts if v["condition"] == "baseline" or v["category"] == "helpful"
+        )
         latency = statistics.median(v["latency_ms"] for v in verdicts)
         lines = [
             f"Guardrail caught {caught} of {len(steered_bad)} completed refused requests.",

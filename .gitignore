@@ -1,5 +1,13 @@
+# Python
 .venv/
 __pycache__/
+*.pyc
+
+# Secrets
 .env
+
 # Raw model replies include hostile and abusive text. Keep them local.
 outputs/
+
+# OS
+.DS_Store

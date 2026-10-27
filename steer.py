@@ -62,11 +62,7 @@ def main():
             down[int(m.group(1))] = mod
             layers[int(m.group(1))] = model.get_submodule(name.rsplit(".mlp", 1)[0])
 
-    colnorm = {
-        (L, n): float(down[L].weight[:, n].float().norm())
-        for specs in conditions.values()
-        for L, n, _ in specs
-    }
+    colnorm = {(L, n): float(down[L].weight[:, n].float().norm()) for specs in conditions.values() for L, n, _ in specs}
     steered_layers = sorted({L for L, _ in colnorm})
 
     # The steering hook: pin one neuron's value going into the down projection.
@@ -100,6 +96,7 @@ def main():
         """Median residual-stream norm leaving each steered layer, skipping token 0."""
         got, handles = {}, []
         for L in steered_layers:
+
             def cap(_m, _a, out, L=L):
                 got[L] = out[0] if isinstance(out, tuple) else out
 
@@ -115,11 +112,9 @@ def main():
         for L, n, dose in conditions[cond]:
             active[(L, n)] = dose * meds[L] / colnorm[(L, n)]
         with torch.inference_mode():
-            out = model.generate(
-                ids, attention_mask=torch.ones_like(ids), max_new_tokens=max_new, do_sample=False
-            )
+            out = model.generate(ids, attention_mask=torch.ones_like(ids), max_new_tokens=max_new, do_sample=False)
         active.clear()
-        return tok.decode(out[0, ids.shape[1]:], skip_special_tokens=True).strip()
+        return tok.decode(out[0, ids.shape[1] :], skip_special_tokens=True).strip()
 
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -131,8 +126,12 @@ def main():
             print(f"\n### [{cat}] {prompt}", flush=True)
             for cond in conditions:
                 reply = generate(ids, cond, meds, args.max_new_tokens)
-                log.write(json.dumps({"kind": "prompt", "category": cat, "prompt": prompt,
-                                      "condition": cond, "response": reply}) + "\n")
+                log.write(
+                    json.dumps(
+                        {"kind": "prompt", "category": cat, "prompt": prompt, "condition": cond, "response": reply}
+                    )
+                    + "\n"
+                )
                 log.flush()
                 print(f"--- {cond}: {reply[:200]!r}", flush=True)
 
@@ -143,8 +142,19 @@ def main():
                 reply = generate(ids, cond, meds, 12)
                 ok = str(answer) in re.findall(r"\d+", reply)
                 score[cond] += ok
-                log.write(json.dumps({"kind": "math", "prompt": prompt, "answer": answer,
-                                      "condition": cond, "response": reply, "correct": ok}) + "\n")
+                log.write(
+                    json.dumps(
+                        {
+                            "kind": "math",
+                            "prompt": prompt,
+                            "answer": answer,
+                            "condition": cond,
+                            "response": reply,
+                            "correct": ok,
+                        }
+                    )
+                    + "\n"
+                )
 
     print(f"\n[sums correct /{args.sums}] {score}")
     print(f"[random control] {RANDOM_PAIR}")

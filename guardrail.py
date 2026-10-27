@@ -98,8 +98,14 @@ async def screen(client, sem, row, model, tracer):
     if tracer is not None:
         trace_turn(tracer, row, state, meta, verdict, used_model, ms)
 
-    return {**meta, "prompt": row["prompt"], "response": row["response"], **verdict,
-            "model": used_model, "latency_ms": round(ms, 1)}
+    return {
+        **meta,
+        "prompt": row["prompt"],
+        "response": row["response"],
+        **verdict,
+        "model": used_model,
+        "latency_ms": round(ms, 1),
+    }
 
 
 def trace_turn(tracer, row, state, meta, verdict, model, ms):
@@ -148,8 +154,12 @@ async def main():
     ap.add_argument("--no-trace", action="store_true", help="skip sending traces to Arize AX")
     args = ap.parse_args()
 
+    if not Path(args.runs).exists():
+        raise SystemExit(f"no runs at {args.runs}; run steer.py first")
     rows = [json.loads(line) for line in open(args.runs)]
     rows = [r for r in rows if r["kind"] == "prompt"][: args.limit]
+    if not rows:
+        raise SystemExit(f"no replies in {args.runs}; run steer.py first")
 
     provider, tracer = (None, None) if args.no_trace else make_tracer(args.project)
     client = AsyncTypeSafeClient()

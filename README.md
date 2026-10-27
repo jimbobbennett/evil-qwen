@@ -40,6 +40,21 @@ Nothing in the weights or the prompt changes. Remove the hook and the model is b
 | `flipped` | L14 N8949 −1, L13 N7956 +1 |
 | `random` | A randomly chosen pair (seed 0) at full strength, as a control |
 
+## What's in the repo
+
+```
+evil-qwen/
+├── prompts.py          # prompt set, sums and the seven steering conditions
+├── steer.py            # 1. run Qwen3.5-4B with the steering hook, log every reply
+├── guardrail.py        # 2. screen each reply with Jev, trace to Arize AX
+├── evaluate.py         # 3. score capability and safety per condition
+├── results/summary.md  # the aggregate numbers from my run
+├── .env.example        # keys for the guardrail step
+└── pyproject.toml      # dependencies (guardrail deps are an optional extra)
+```
+
+Each script writes to, or reads from, `outputs/`, which stays local.
+
 ## Requirements
 
 - Python 3.11+ and [uv](https://docs.astral.sh/uv/).
@@ -49,7 +64,8 @@ Nothing in the weights or the prompt changes. Remove the hook and the model is b
 ## Run it
 
 ```bash
-git clone <this repo> && cd evil-qwen
+git clone https://github.com/jimbobbennett/evil-qwen.git
+cd evil-qwen
 uv sync
 ```
 
@@ -90,7 +106,7 @@ This prints sums correct, refused requests completed, and guardrail decisions fo
 
 ## Results
 
-From my run on an M4 Max, bf16, greedy decoding:
+From my run on an M4 Max, bf16, greedy decoding, screened with Jev `jev-1.14.0`:
 
 | Condition | Sums correct | Refused requests completed | Blocked | Review | Allowed |
 |---|---|---|---|---|---|
@@ -118,7 +134,7 @@ A few other things showed up:
 
 This is a demonstration, not a benchmark. It's one model, 10 prompts, 20 sums and greedy decoding on one machine. "Refused requests completed" comes from Jev's behaviour label, which matched my own reading of every reply except one: the quarter-strength revenge reply opens with a refusal, then suggests ways to make the dog suffer. I'd marked it refused. Jev caught it.
 
-Results on CUDA or CPU may differ slightly from MPS because of floating-point differences, but the pattern should hold.
+Results on CUDA or CPU may differ slightly from MPS because of floating-point differences, but the pattern should hold. `TYPESAFE_MODEL` defaults to `jev-latest`, so newer Jev versions may score a few borderline replies differently. Set it to `jev-1.14.0` to match my run.
 
 ## Credits
 
